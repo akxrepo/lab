@@ -1,5 +1,7 @@
 namespace: pod-info-1
 
+environment: dev
+
 image:
   name: 934639816556.dkr.ecr.us-east-1.amazonaws.com/pod-info
   tag: latest
@@ -22,5 +24,5 @@ config:
 
 secret:
   dbUser: admin
-  dbPassword: changeme123
+  dbPassword: podinfo1
   apiKey: my-secret-api-key
