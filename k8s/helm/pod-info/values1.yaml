@@ -6,7 +6,7 @@ image:
   name: 934639816556.dkr.ecr.us-east-1.amazonaws.com/pod-info
   tag: latest
 
-replicas: 1
+replicas: 2
 
 service:
   port: 80
@@ -23,6 +23,6 @@ config:
   maxClients: "150"
 
 secret:
-  dbUser: admin1
+  dbUser: admin
   dbPassword: podinfo1
   apiKey: my-secret-api-key
