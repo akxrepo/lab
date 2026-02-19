@@ -1,0 +1,26 @@
+namespace: pod-info-1
+
+image:
+  name: 934639816556.dkr.ecr.us-east-1.amazonaws.com/pod-info
+  tag: latest
+
+replicas: 1
+
+service:
+  port: 80
+  targetPort: 8080
+
+ingress:
+  scheme: internet-facing
+  targetType: ip
+  path: /
+
+config:
+  serverName: pod-info.example.com
+  logLevel: warn
+  maxClients: "150"
+
+secret:
+  dbUser: admin
+  dbPassword: changeme123
+  apiKey: my-secret-api-key

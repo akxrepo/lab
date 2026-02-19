@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-info
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: pod-info
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: pod-info
+  template:
+    metadata:
+      labels:
+        app: pod-info
+    spec:
+      containers:
+      - name: pod-info
+        image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+        ports:
+        - containerPort: 8080
+        env:
+          - name: SERVER_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: pod-info-config
+                key: SERVER_NAME
+          - name: LOG_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: pod-info-config
+                key: LOG_LEVEL
+          - name: MAX_CLIENTS
+            valueFrom:
+              configMapKeyRef:
+                name: pod-info-config
+                key: MAX_CLIENTS
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: pod-info-secret
+                key: DB_USER
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: pod-info-secret
+                key: DB_PASSWORD
+          - name: API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: pod-info-secret
+                key: API_KEY

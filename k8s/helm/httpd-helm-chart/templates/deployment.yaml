@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: httpd
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: httpd
+  template:
+    metadata:
+      labels:
+        app: httpd
+    spec:
+      containers:
+      - name: httpd
+        image: {{ .Values.image.name }}

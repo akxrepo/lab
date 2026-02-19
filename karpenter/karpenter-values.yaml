@@ -1,0 +1,17 @@
+settings:
+  clusterName: eks-mgd-cluster-1-33
+  interruptionQueue: eks-mgd-cluster-1-33
+
+replicas: 1
+
+controller:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    - name: FEATURE_GATES
+      value: "ReservedCapacity=true,SpotToSpotConsolidation=false,NodeRepair=false,NodeOverlay=false"

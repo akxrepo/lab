@@ -1,0 +1,17 @@
+# httpd-chart/values.yaml
+namespace: httpd-ingress
+environment: dev
+
+image:
+  name: httpd
+
+replicas: 1
+
+service:
+  port: 80
+  targetPort: 80
+
+ingress:
+  scheme: internet-facing
+  targetType: ip
+  path: /

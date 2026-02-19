@@ -1,0 +1,15 @@
+configs:
+  params:
+    server.insecure: true  # ALB handles SSL termination
+
+server:
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    annotations:
+      kubernetes.io/ingress.class: alb
+      alb.ingress.kubernetes.io/scheme: internet-facing      # or internal for private
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    hosts:
+      - ""  # Empty = accept all, access via ALB DNS
