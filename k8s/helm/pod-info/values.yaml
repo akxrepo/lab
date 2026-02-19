@@ -1,5 +1,7 @@
 namespace: pod-info
 
+environment: dev
+
 image:
   name: 934639816556.dkr.ecr.us-east-1.amazonaws.com/pod-info
   tag: latest
