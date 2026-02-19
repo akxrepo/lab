@@ -23,6 +23,6 @@ config:
   maxClients: "150"
 
 secret:
-  dbUser: admin
+  dbUser: admin1
   dbPassword: podinfo1
   apiKey: my-secret-api-key
