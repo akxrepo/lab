@@ -20,22 +20,10 @@ spec:
         image: {{ .Values.image.name }}:{{ .Values.image.tag }}
         ports:
         - containerPort: 8080
+        envFrom:
+          - configMapRef:
+              name: pod-info-config
         env:
-          - name: SERVER_NAME
-            valueFrom:
-              configMapKeyRef:
-                name: pod-info-config
-                key: SERVER_NAME
-          - name: LOG_LEVEL
-            valueFrom:
-              configMapKeyRef:
-                name: pod-info-config
-                key: LOG_LEVEL
-          - name: MAX_CLIENTS
-            valueFrom:
-              configMapKeyRef:
-                name: pod-info-config
-                key: MAX_CLIENTS
           - name: DB_USER
             valueFrom:
               secretKeyRef:
@@ -51,3 +39,16 @@ spec:
               secretKeyRef:
                 name: pod-info-secret
                 key: API_KEY
+        volumeMounts:
+          - name: config-vol
+            mountPath: /etc/pod-info-config
+          - name: secret-vol
+            mountPath: /etc/pod-info-secret
+            readOnly: true
+      volumes:
+        - name: config-vol
+          configMap:
+            name: pod-info-config
+        - name: secret-vol
+          secret:
+            secretName: pod-info-secret
