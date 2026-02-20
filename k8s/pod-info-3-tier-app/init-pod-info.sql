@@ -1,0 +1,18 @@
+-- Create database (optional, if not already created)
+-- CREATE DATABASE pod_db;
+
+-- Connect to database
+\c pod_db;
+
+-- Create schema
+CREATE SCHEMA IF NOT EXISTS pod_info;
+
+-- Create table
+CREATE TABLE IF NOT EXISTS pod_info.pod_info (
+    id SERIAL PRIMARY KEY,
+    pod_name VARCHAR(255),
+    pod_ip VARCHAR(50),
+    namespace VARCHAR(50),
+    collected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
