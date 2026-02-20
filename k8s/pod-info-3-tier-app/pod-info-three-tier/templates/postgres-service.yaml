@@ -1,0 +1,26 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Release.Name }}
+  name: {{ .Values.postgres.service.name }}
+  labels:
+{{ include "pod-info-three-tier.labels" . | indent 4 }}
+{{- if .Values.commonLabels }}
+{{ toYaml .Values.commonLabels | indent 4 }}
+{{- end }}
+  annotations:
+{{- if .Values.commonAnnotations }}
+{{ toYaml .Values.commonAnnotations | indent 4 }}
+{{- end }}
+spec:
+{{- if .Values.postgres.service.headless }}
+  clusterIP: None
+{{- end }}
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: {{ .Values.postgres.service.port }}
+      targetPort: {{ .Values.postgres.service.port }}
+{{- end }}

@@ -1,0 +1,41 @@
+{{- if .Values.backend.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Values.backend.rbac.clusterRoleName }}
+  labels:
+{{ include "pod-info-three-tier.labels" . | indent 4 }}
+{{- if .Values.commonLabels }}
+{{ toYaml .Values.commonLabels | indent 4 }}
+{{- end }}
+  annotations:
+{{- if .Values.commonAnnotations }}
+{{ toYaml .Values.commonAnnotations | indent 4 }}
+{{- end }}
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Values.backend.rbac.clusterRoleBindingName }}
+  labels:
+{{ include "pod-info-three-tier.labels" . | indent 4 }}
+{{- if .Values.commonLabels }}
+{{ toYaml .Values.commonLabels | indent 4 }}
+{{- end }}
+  annotations:
+{{- if .Values.commonAnnotations }}
+{{ toYaml .Values.commonAnnotations | indent 4 }}
+{{- end }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.backend.serviceAccount.name }}
+  namespace: {{ .Release.Name }}
+roleRef:
+  kind: ClusterRole
+  name: {{ .Values.backend.rbac.clusterRoleName }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

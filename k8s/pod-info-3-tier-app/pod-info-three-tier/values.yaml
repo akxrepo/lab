@@ -1,0 +1,117 @@
+nameOverride: ""
+fullnameOverride: ""
+
+postgres:
+  enabled: true
+  image: postgres:16
+  service:
+    name: postgres
+    port: 5432
+    headless: true
+  auth:
+    db: pod_db
+    user: postgres
+    password: postgres
+  pgdata: /var/lib/postgresql/data/pgdata
+  storage:
+    size: 1Gi
+    storageClassName: gp2
+    accessModes: ["ReadWriteOnce"]
+  initSql:
+    enabled: true
+    configMapName: postgres-init-sql
+    filename: init-pod-info.sql
+    sql: |
+      -- Create database (optional, if not already created)
+      \c pod_db;
+      CREATE SCHEMA IF NOT EXISTS pod_info;
+      CREATE TABLE IF NOT EXISTS pod_info.pod_info (
+          id SERIAL PRIMARY KEY,
+          pod_name VARCHAR(255),
+          pod_ip VARCHAR(50),
+          namespace VARCHAR(50),
+          collected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+  probes:
+    liveness:
+      enabled: true
+      port: 5432
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 6
+    readiness:
+      enabled: true
+      port: 5432
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 6
+backend:
+  replicas: 2
+  image: 934639816556.dkr.ecr.us-east-1.amazonaws.com/pod-info-backend:latest
+  service:
+    name: pod-backend
+    port: 5000
+    type: ClusterIP
+  env:
+    DB_HOST: postgres
+    DB_NAME: pod_db
+    DB_USER: postgres
+    DB_PASS: postgres
+  serviceAccount:
+    name: pod-reader
+  rbac:
+    create: true
+    clusterRoleName: pod-reader
+    clusterRoleBindingName: pod-reader-binding
+  probes:
+    liveness:
+      enabled: true
+      path: /health
+      port: 5000
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+    readiness:
+      enabled: true
+      path: /health
+      port: 5000
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+frontend:
+  replicas: 2
+  probes:
+    liveness:
+      enabled: true
+      path: /
+      port: 80
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+    readiness:
+      enabled: true
+      path: /
+      port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  image: 934639816556.dkr.ecr.us-east-1.amazonaws.com/pod-info-frontend:latest
+  service:
+    name: pod-frontend
+    port: 80
+    type: LoadBalancer
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "external"
+      service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+      service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+
+commonLabels: {}
+commonAnnotations: {}

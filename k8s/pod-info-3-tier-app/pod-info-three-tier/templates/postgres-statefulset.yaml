@@ -1,0 +1,84 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: {{ .Release.Name }}
+  name: postgres
+  labels:
+{{ include "pod-info-three-tier.labels" . | indent 4 }}
+{{- if .Values.commonLabels }}
+{{ toYaml .Values.commonLabels | indent 4 }}
+{{- end }}
+  annotations:
+{{- if .Values.commonAnnotations }}
+{{ toYaml .Values.commonAnnotations | indent 4 }}
+{{- end }}
+spec:
+  serviceName: {{ .Values.postgres.service.name }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: {{ .Values.postgres.image }}
+        env:
+        - name: POSTGRES_DB
+          value: {{ .Values.postgres.auth.db }}
+        - name: POSTGRES_USER
+          value: {{ .Values.postgres.auth.user }}
+        - name: POSTGRES_PASSWORD
+          value: {{ .Values.postgres.auth.password }}
+        - name: PGDATA
+          value: {{ .Values.postgres.pgdata }}
+        ports:
+        - containerPort: {{ .Values.postgres.service.port }}
+{{- if .Values.postgres.probes.liveness.enabled }}
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.postgres.probes.liveness.port }}
+          initialDelaySeconds: {{ .Values.postgres.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.postgres.probes.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.postgres.probes.liveness.timeoutSeconds }}
+          failureThreshold: {{ .Values.postgres.probes.liveness.failureThreshold }}
+{{- end }}
+{{- if .Values.postgres.probes.readiness.enabled }}
+        readinessProbe:
+          tcpSocket:
+            port: {{ .Values.postgres.probes.readiness.port }}
+          initialDelaySeconds: {{ .Values.postgres.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.postgres.probes.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.postgres.probes.readiness.timeoutSeconds }}
+          failureThreshold: {{ .Values.postgres.probes.readiness.failureThreshold }}
+{{- end }}
+        volumeMounts:
+          - name: data
+            mountPath: /var/lib/postgresql/data
+{{- if and .Values.postgres.initSql.enabled .Values.postgres.initSql.configMapName }}
+          - name: init-sql
+            mountPath: /docker-entrypoint-initdb.d/{{ .Values.postgres.initSql.filename }}
+            subPath: {{ .Values.postgres.initSql.filename }}
+{{- end }}
+      volumes:
+{{- if and .Values.postgres.initSql.enabled .Values.postgres.initSql.configMapName }}
+        - name: init-sql
+          configMap:
+            name: {{ .Values.postgres.initSql.configMapName }}
+{{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: {{ toYaml .Values.postgres.storage.accessModes | nindent 10 }}
+{{- if .Values.postgres.storage.storageClassName }}
+        storageClassName: {{ .Values.postgres.storage.storageClassName }}
+{{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.postgres.storage.size }}
+{{- end }}

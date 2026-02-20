@@ -1,0 +1,6 @@
+apiVersion: v2
+name: pod-info-three-tier
+description: Pod info 3-tier app (frontend, backend, postgres)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

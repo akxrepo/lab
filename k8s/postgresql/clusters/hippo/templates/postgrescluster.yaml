@@ -1,0 +1,100 @@
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: {{ .Values.cluster.name }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  postgresVersion: {{ .Values.cluster.postgresVersion }}
+  image: {{ .Values.cluster.image }}
+
+  instances:
+    {{- range .Values.cluster.instances }}
+    - name: {{ .name }}
+      replicas: {{ .replicas }}
+      resources:
+        requests:
+          cpu: {{ .resources.requests.cpu | quote }}
+          memory: {{ .resources.requests.memory }}
+        limits:
+          cpu: {{ .resources.limits.cpu | quote }}
+          memory: {{ .resources.limits.memory }}
+      dataVolumeClaimSpec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .storage }}
+      {{- if .nodeLabel }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workload-type
+                    operator: In
+                    values: [{{ .nodeLabel | quote }}]
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  postgres-operator.crunchydata.com/instance-set: {{ .name }}
+              topologyKey: kubernetes.io/hostname
+      {{- end }}
+    {{- end }}
+
+  backups:
+    pgbackrest:
+      image: {{ .Values.pgbackrest.image }}
+      repos:
+        - name: repo1
+          schedules:
+            full: {{ .Values.pgbackrest.schedule.full | quote }}
+            differential: {{ .Values.pgbackrest.schedule.differential | quote }}
+          {{- if .Values.pgbackrest.s3.enabled }}
+          s3:
+            bucket: {{ .Values.pgbackrest.s3.bucket }}
+            endpoint: {{ .Values.pgbackrest.s3.endpoint }}
+            region: {{ .Values.pgbackrest.s3.region }}
+          {{- else }}
+          volume:
+            volumeClaimSpec:
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: {{ .Values.pgbackrest.storage }}
+          {{- end }}
+      {{- if .Values.pgbackrest.s3.enabled }}
+      configuration:
+        - secret:
+            name: {{ .Values.pgbackrest.s3.secretName }}
+      {{- end }}
+
+  proxy:
+    pgBouncer:
+      image: {{ .Values.pgbouncer.image }}
+      replicas: {{ .Values.pgbouncer.replicas }}
+      config:
+        global:
+          pool_mode: {{ .Values.pgbouncer.poolMode }}
+          max_client_conn: {{ .Values.pgbouncer.maxClientConn | quote }}
+          default_pool_size: {{ .Values.pgbouncer.defaultPoolSize | quote }}
+
+  users:
+    {{- range .Values.cluster.users }}
+    - name: {{ .name }}
+      databases:
+        {{- range .databases }}
+        - {{ . }}
+        {{- end }}
+      {{- if .options }}
+      options: {{ .options | quote }}
+      {{- end }}
+    {{- end }}
+
+  {{- if .Values.monitoring.enabled }}
+  monitoring:
+    pgmonitor:
+      exporter:
+        image: {{ .Values.monitoring.image }}
+  {{- end }}

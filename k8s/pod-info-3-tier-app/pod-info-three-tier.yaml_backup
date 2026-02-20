@@ -1,0 +1,188 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+data:
+  init-pod-info.sql: |
+    -- Create database (optional, if not already created)
+    \c pod_db;
+    CREATE SCHEMA IF NOT EXISTS pod_info;
+    CREATE TABLE IF NOT EXISTS pod_info.pod_info (
+        id SERIAL PRIMARY KEY,
+        pod_name VARCHAR(255),
+        pod_ip VARCHAR(50),
+        namespace VARCHAR(50),
+        collected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16
+        env:
+        - name: POSTGRES_DB
+          value: pod_db
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+          - name: data
+            mountPath: /var/lib/postgresql/data
+          - name: init-sql
+            mountPath: /docker-entrypoint-initdb.d/init-pod-info.sql
+            subPath: init-pod-info.sql
+      volumes:
+        - name: init-sql
+          configMap:
+            name: postgres-init-sql
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: gp2
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pod-backend
+  template:
+    metadata:
+      labels:
+        app: pod-backend
+    spec:
+      serviceAccountName: pod-reader
+      containers:
+      - name: backend
+        image: 934639816556.dkr.ecr.us-east-1.amazonaws.com/pod-info-backend:latest
+        env:
+        - name: DB_HOST
+          value: postgres
+        - name: DB_NAME
+          value: pod_db
+        - name: DB_USER
+          value: postgres
+        - name: DB_PASS
+          value: postgres
+        ports:
+        - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pod-backend
+spec:
+  selector:
+    app: pod-backend
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pod-reader
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: pod-reader-binding
+subjects:
+- kind: ServiceAccount
+  name: pod-reader
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-frontend
+  labels:
+    app: pod-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pod-frontend
+  template:
+    metadata:
+      labels:
+        app: pod-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: 934639816556.dkr.ecr.us-east-1.amazonaws.com/pod-info-frontend:latest
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pod-frontend
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "external"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+spec:
+  selector:
+    app: pod-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer  # Change to ClusterIP if internal only
+

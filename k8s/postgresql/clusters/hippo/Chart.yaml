@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hippo-postgres-cluster
+description: Crunchy Postgres cluster for hippo
+type: application
+version: 1.0.0
+dependencies: []

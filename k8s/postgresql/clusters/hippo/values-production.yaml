@@ -1,0 +1,51 @@
+# Production overrides — merged on top of values.yaml by ArgoCD
+cluster:
+  instances:
+    - name: primary-set
+      replicas: 1
+      nodeLabel: postgres-primary
+      storage: 500Gi           # larger disks in prod
+      resources:
+        requests:
+          cpu: "8"
+          memory: 32Gi
+        limits:
+          cpu: "16"
+          memory: 64Gi
+
+    - name: read-set
+      replicas: 5              # more read replicas in prod
+      nodeLabel: postgres-replica
+      storage: 500Gi
+      resources:
+        requests:
+          cpu: "8"
+          memory: 32Gi
+        limits:
+          cpu: "16"
+          memory: 64Gi
+
+    - name: analytics-set
+      replicas: 2
+      nodeLabel: postgres-analytics
+      storage: 2Ti
+      resources:
+        requests:
+          cpu: "32"
+          memory: 128Gi
+        limits:
+          cpu: "64"
+          memory: 256Gi
+
+pgbackrest:
+  s3:
+    enabled: true              # use S3 in prod instead of PVC
+    bucket: prod-pg-backups
+    endpoint: s3.amazonaws.com
+    region: ap-southeast-2
+    secretName: hippo-s3-creds  # managed by External Secrets Operator
+
+pgbouncer:
+  replicas: 4                  # more poolers in prod
+  maxClientConn: "5000"
+  defaultPoolSize: "50"

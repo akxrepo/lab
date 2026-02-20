@@ -1,0 +1,74 @@
+cluster:
+  name: hippo
+  postgresVersion: 16
+  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:ubi8-16.2-0
+  users:
+    - name: appuser
+      databases: [myapp]
+    - name: readonly
+      databases: [myapp]
+
+  instances:
+    - name: primary-set
+      replicas: 1
+      nodeLabel: postgres-primary
+      storage: 100Gi
+      resources:
+        requests:
+          cpu: "4"
+          memory: 16Gi
+        limits:
+          cpu: "8"
+          memory: 32Gi
+
+    - name: read-set
+      replicas: 3
+      nodeLabel: postgres-replica
+      storage: 100Gi
+      resources:
+        requests:
+          cpu: "4"
+          memory: 16Gi
+        limits:
+          cpu: "8"
+          memory: 32Gi
+
+    - name: analytics-set
+      replicas: 2
+      nodeLabel: postgres-analytics
+      storage: 500Gi
+      resources:
+        requests:
+          cpu: "16"
+          memory: 64Gi
+        limits:
+          cpu: "32"
+          memory: 128Gi
+
+pgbackrest:
+  image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.49-0
+  storage: 200Gi
+  schedule:
+    full: "0 1 * * 0"
+    differential: "0 1 * * 1-6"
+  s3:
+    enabled: false
+    bucket: ""
+    endpoint: ""
+    region: ""
+    secretName: ""
+
+pgbouncer:
+  image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbouncer:ubi8-1.22-0
+  replicas: 2
+  poolMode: transaction
+  maxClientConn: "1000"
+  defaultPoolSize: "25"
+
+analyticsEndpoint:
+  enabled: true
+  instanceSet: analytics-set
+
+monitoring:
+  enabled: true
+  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres-exporter:ubi8-5.6.0-0

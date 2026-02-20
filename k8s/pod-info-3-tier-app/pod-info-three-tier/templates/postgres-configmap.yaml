@@ -1,0 +1,19 @@
+{{- if and .Values.postgres.enabled .Values.postgres.initSql.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Release.Name }}
+  name: {{ .Values.postgres.initSql.configMapName }}
+  labels:
+{{ include "pod-info-three-tier.labels" . | indent 4 }}
+{{- if .Values.commonLabels }}
+{{ toYaml .Values.commonLabels | indent 4 }}
+{{- end }}
+{{- if .Values.commonAnnotations }}
+  annotations:
+{{ toYaml .Values.commonAnnotations | indent 4 }}
+{{- end }}
+data:
+  {{ .Values.postgres.initSql.filename }}: |
+{{ .Values.postgres.initSql.sql | nindent 4 }}
+{{- end }}

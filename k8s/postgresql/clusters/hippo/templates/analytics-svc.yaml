@@ -1,0 +1,18 @@
+{{- if .Values.analyticsEndpoint.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.cluster.name }}-analytics
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  selector:
+    postgres-operator.crunchydata.com/cluster: {{ .Values.cluster.name }}
+    postgres-operator.crunchydata.com/instance-set: {{ .Values.analyticsEndpoint.instanceSet }}
+    postgres-operator.crunchydata.com/role: replica
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+{{- end }}
