@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloud-repo
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  type: git
+  url: git@github.com:norwoodsystems/cloud-deployment.git
+  sshPrivateKey: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    b3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABC6iMrCX9
+    e8cBpoPxfLTPDzAAAAEAAAAAEAAAEXAAAAB3NzaC1yc2EAAAADAQABAAABAQCv7PNO/jYK
+    nClARhVpiLtpZgDFV4tHxsP75AP28377Z7aJ3TebIAhdnQVEm2T0MyOI2u4bR84ZSbq4NB
+    cLNR2W8VsDpjOFuC1dYp2Kegc13uWj7gU1eUXDCh0Pq4STH8OoiasrlyrMAgBOskoYctgW
+    tsWAJoDKCFJkNNEpDm0K43g2K4UZsESWY8LcMkzg53n5baAxInqEVcOJGZzjIGXYezD7Dz
+    0zID8EogHGyuvPZ8ExKEAinwaJSbl4flYf7ELiH54zqsWl9vP9nLPT6RK+tcsuRBPGTC6b
+    exy+CCUYyLLMTWzuAEu2sMKUkR45T0cEMh1kKJRCsDAxbK3FCvKpAAAD0Llj0cWvNPVnAv
+    ZBQbUfb8PAUIKGAEsfUnfnABE/4yoWYmlwtkmmdCNoqOLhEQXDLC1EGtMNV3/i9rpujN3k
+    XiAe17HL3Up0IbcVktoB9SuldCswQC0wRjwXSYXdmYB9lD2aij2gzS6JsMbvMO0Hwz7uHn
+    wZVi+1cNQP8LL6ES8Fn+DnCOPpNXWDz0MCLsVs6e0Zjx/AeKmX2JLKPxISpCYOUTe01HTn
+    10H6o/C4+aCubCyckYO5ROLGakTsy6MqCS3SQdYlGhnjEX7RkIu8o1Ou/q54/ANB7f5va7
+    uaVtYPqyNfSkoOAfQ+ZxXlZn5Pdft2acUnOcMz56InO3yb0R61+tYve0EWitTOaib74ghp
+    vyVAwMCJ7O6xHSxwCa4+NvB1RXaTY10aV9dThTQI1RHIIKqB35gid9WymDevESq+7rgLQX
+    NPxp9Yh8pwg/xxxzISsn3ZI4nPBIXrDK2EqVCljRSvkaHSNeFj37oFTMgsHrmgBbwbUxjo
+    mr92nLSuzXUgJ3sA1dGhpzhpCyJcSidT8/iqinp9qXSuFE02NopecgfmTEwVqamteKkVV6
+    Gep67W65XijwZyYapyoG8YRPSWzg1u4P5UPZuO5xDmFRl0xXZyvFovP4pkE55f5b+tsY+B
+    3edRaz+2/mqZbutZ9zfsIt+s9dkL7Nw8c6GjBcHVkBfIx2VuxIcWuaZ6Wn5RBr7znTqJ2w
+    sq7giqloZZi27/wK1Ng+oeLMzGuvbb6NJBQTWPwhOD1sGvlEtPFW6srk4GLqz44TByjkcN
+    W7iqL6fnl9kNTS+OfE9NvYmiZD/NVhx4zp7AbhbnrwN1boGFZCZNV1D5m9fs/2YKE9n+HU
+    fqdOCIbkjaPanfB3tdBQG2l8LiAXZjtWavO3LKGbtOY/XEHUaRgdolCRbm1WP6iE9kuMjI
+    lYEDWsCHY0XmbCdczAEsdsS4wTbqWLZZO7uDde+AxL7lmy5tynCilo2cqzqLn0CxewWjbQ
+    AtaXeTE9J/hYt8kYR/rJ/K8onko3eAzSs1sLWvf4Hn4baIZOcpdCwgjeIRrT63lLLA6Rqh
+    MErnKgHQwddiQXDpp4mYMYFooVVRZfBP7B4O84FdO8Dw/eiVIo9gryOkEcV/XQZVIsTd00
+    /wy7Vsdi2LJA5uMXz1UyuH+wqUuZ8bnZBbPj42d9paaWvCJfogQcT4cbrxc6WOfSNmZuwY
+    68c6rm1L5AjOtUQhLNzLRXfAHdyGMBQ8iK5pHq0MgYw6iuuD+XvopkLcVmHmYum3AKNxPq
+    f4PaQTm78aFGMPGfpTkF4roIHrRzU=
+    -----END OPENSSH PRIVATE KEY-----
