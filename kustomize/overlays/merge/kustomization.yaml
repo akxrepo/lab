@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ./../../base
+
+patches:
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      namespace: mergepatch
+      metadata:
+        name: nginx
+      spec:
+        replicas: 1 
+  - patch: |-
+      apiVersion: v1
+      kind: Service
+      namespace: mergepatch
+      metadata:
+        name: nginx-svc
+      spec:
+        ports:
+        - name: "8090"
+          $patch: delete #without this kustomize appends these as additional ports 
+          port: 8090
+          protocol: TCP
+          targetPort: 8090
+      

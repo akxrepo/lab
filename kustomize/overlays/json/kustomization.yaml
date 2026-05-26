@@ -1,0 +1,33 @@
+resources:
+- ./../../base
+
+patches:
+  - target:
+      kind: Deployment
+      name: nginx
+    patch: |-
+      - op: replace
+        path: /namespace
+        value: jsonpatch
+      - op: replace
+        path: /spec/replicas
+        value: 6
+  - target:
+      kind: Service
+      name: nginx-svc
+    patch: |-
+      - op: replace
+        path: /namespace
+        value: jsonpatch
+      - op: replace
+        path: /spec/ports/0/port
+        value: 8080
+      - op: replace
+        path: /spec/ports/0/targetPort
+        value: 8080
+      - op: replace
+        path: /spec/ports/0/protocol
+        value: UDP
+      - op: replace
+        path: /spec/selector/app
+        value: testnginx
