@@ -1,0 +1,155 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multus-svc-controller
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: multus-svc-controller
+  template:
+    metadata:
+      labels:
+        app: multus-svc-controller
+    spec:
+      serviceAccountName: multus-svc-controller
+      containers:
+      - name: controller
+        image: python:3.12-alpine
+        env:
+        - name: NAMESPACE
+          value: default
+        - name: SERVICES_JSON
+          value: |
+            [
+              {
+                "service": "nginx-eth1-svc",
+                "selector": "app=nginx-multus",
+                "interface": "eth1",
+                "port": 80
+              },
+              {
+                "service": "httpd-eth1-svc",
+                "selector": "app=httpd-multus",
+                "interface": "eth1",
+                "port": 80
+              }
+            ]
+        command:
+        - python
+        - -u
+        - -c
+        - |
+          import os, json, time, ssl, urllib.request, urllib.error
+
+          ns = os.environ["NAMESPACE"]
+          services = json.loads(os.environ["SERVICES_JSON"])
+
+          host = "https://kubernetes.default.svc"
+          token = open("/var/run/secrets/kubernetes.io/serviceaccount/token").read()
+          ca = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          ctx = ssl.create_default_context(cafile=ca)
+
+          def req(method, path, body=None):
+              data = json.dumps(body).encode() if body else None
+              r = urllib.request.Request(
+                  host + path,
+                  data=data,
+                  method=method,
+                  headers={
+                      "Authorization": f"Bearer {token}",
+                      "Content-Type": "application/json"
+                  }
+              )
+              try:
+                  with urllib.request.urlopen(r, context=ctx) as x:
+                      return x.status, x.read().decode()
+              except urllib.error.HTTPError as e:
+                  return e.code, e.read().decode()
+
+          def sync_service(cfg):
+              svc = cfg["service"]
+              selector = cfg["selector"]
+              iface = cfg["interface"]
+              port = int(cfg["port"])
+              es_name = f"{svc}-{iface}"
+
+              status, body = req(
+                  "GET",
+                  f"/api/v1/namespaces/{ns}/pods?labelSelector={selector}"
+              )
+
+              endpoints = []
+
+              if status == 200:
+                  pods = json.loads(body).get("items", [])
+
+                  for pod in pods:
+                      if pod.get("status", {}).get("phase") != "Running":
+                          continue
+
+                      ann = pod.get("metadata", {}).get("annotations", {})
+                      net = ann.get("k8s.v1.cni.cncf.io/network-status")
+
+                      if not net:
+                          continue
+
+                      try:
+                          networks = json.loads(net)
+                      except Exception:
+                          continue
+
+                      for n in networks:
+                          if n.get("interface") == iface:
+                              ips = n.get("ips", [])
+                              if ips:
+                                  endpoints.append({
+                                      "addresses": [ips[0]],
+                                      "conditions": {"ready": True},
+                                      "targetRef": {
+                                          "kind": "Pod",
+                                          "namespace": ns,
+                                          "name": pod["metadata"]["name"]
+                                      }
+                                  })
+
+              endpointslice = {
+                  "apiVersion": "discovery.k8s.io/v1",
+                  "kind": "EndpointSlice",
+                  "metadata": {
+                      "name": es_name,
+                      "namespace": ns,
+                      "labels": {
+                          "kubernetes.io/service-name": svc,
+                          "endpointslice.kubernetes.io/managed-by": "multus-eth1-controller"
+                      }
+                  },
+                  "addressType": "IPv4",
+                  "ports": [{
+                      "name": "http",
+                      "protocol": "TCP",
+                      "port": port
+                  }],
+                  "endpoints": endpoints
+              }
+
+              path = f"/apis/discovery.k8s.io/v1/namespaces/{ns}/endpointslices/{es_name}"
+              status, _ = req("GET", path)
+
+              if status == 404:
+                  status, _ = req(
+                      "POST",
+                      f"/apis/discovery.k8s.io/v1/namespaces/{ns}/endpointslices",
+                      endpointslice
+                  )
+              else:
+                  status, _ = req("PUT", path, endpointslice)
+
+              print(f"synced {len(endpoints)} {iface} endpoints for service {svc}, status={status}")
+
+          while True:
+              for cfg in services:
+                  sync_service(cfg)
+
+              time.sleep(10)

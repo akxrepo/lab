@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nginx-multus
+spec:
+  serviceName: nginx-multus-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-multus
+  template:
+    metadata:
+      labels:
+        app: nginx-multus
+      annotations:
+        k8s.v1.cni.cncf.io/networks: '[
+          {
+            "name": "enx1-net",
+            "interface": "eth1"
+          }
+        ]'
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        command:
+        - /bin/sh
+        - -c
+        - |
+          ETH0_IP=$(ip -4 addr show eth0 | awk '/inet / {print $2}' | cut -d/ -f1)
+          ETH1_IP=$(ip -4 addr show eth1 | awk '/inet / {print $2}' | cut -d/ -f1)
+
+          echo "ETH0_IP=$ETH0_IP"
+          echo "ETH1_IP=$ETH1_IP"
+
+          mkdir -p /usr/share/nginx/html/eth0
+          mkdir -p /usr/share/nginx/html/eth1
+
+          echo "Hello from nginx over eth0 - cluster network: ${ETH0_IP}" > /usr/share/nginx/html/eth0/index.html
+          echo "Hello from nginx over eth1 - Multus network: ${ETH1_IP}" > /usr/share/nginx/html/eth1/index.html
+
+          cat > /etc/nginx/conf.d/default.conf <<EOF
+          server {
+              listen ${ETH0_IP}:80;
+              root /usr/share/nginx/html/eth0;
+              index index.html;
+          }
+
+          server {
+              listen ${ETH1_IP}:80;
+              root /usr/share/nginx/html/eth1;
+              index index.html;
+          }
+          EOF
+
+          cat /etc/nginx/conf.d/default.conf
+          nginx -g 'daemon off;'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-multus-headless
+spec:
+  ports:
+  - name: http
+    port: 80

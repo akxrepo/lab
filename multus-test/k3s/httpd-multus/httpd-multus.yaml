@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-eth0-svc
+  namespace: default
+spec:
+  selector:
+    app: httpd-multus
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-eth1-svc
+  namespace: default
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-multus-headless
+  namespace: default
+spec:
+  clusterIP: None
+  selector:
+    app: httpd-multus
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: httpd-multus
+  namespace: default
+spec:
+  serviceName: httpd-multus-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpd-multus
+  template:
+    metadata:
+      labels:
+        app: httpd-multus
+      annotations:
+        k8s.v1.cni.cncf.io/networks: |
+          [
+            {
+              "name": "enx1-net",
+              "interface": "eth1"
+            }
+          ]
+    spec:
+      containers:
+      - name: httpd
+        image: httpd:2.4-alpine
+        ports:
+        - containerPort: 80

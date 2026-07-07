@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devtools-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devtools
+  template:
+    metadata:
+      labels:
+        app: devtools
+      annotations:
+        k8s.v1.cni.cncf.io/networks: |
+          [
+            {
+              "name": "enx1-net",
+              "interface": "eth1"
+            }
+          ]
+    spec:
+      containers:
+      - name: devtools
+        image: akimagehub/devtools:latest
+        stdin: true
+        tty: true
