@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: devtools-site1-2nics
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "enx1-net-static",
+          "interface": "eth1"
+        },
+        {
+          "name": "enx2-net-dynamic",
+          "interface": "eth2"
+        }
+      ]
+spec:
+  containers:
+  - name: devtools
+    image: akimagehub/devtools:latest
+    stdin: true
+    tty: true
+    command:
+    - /bin/sh
+    - -c
+    - |
+      ip link set eth1 up
+
+      if ! ip addr show dev eth1 | grep -q '10.0.26.161/24'; then
+        ip addr add 10.0.26.161/24 dev eth1
+      fi
+
+      echo "===== Interfaces ====="
+      ip addr
+
+      echo "===== Routes ====="
+      ip route
+
+      sleep infinity
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN

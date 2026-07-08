@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: devtools-site1-ipvlan
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "enx2-site1-ipvlan",
+          "interface": "eth2"
+        }
+      ]
+spec:
+  containers:
+  - name: devtools
+    image: akimagehub/devtools:latest
+    stdin: true
+    tty: true
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN

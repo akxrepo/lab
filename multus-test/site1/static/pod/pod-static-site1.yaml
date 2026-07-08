@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multus-test-static
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "enx1-net-static",
+          "interface": "eth1"
+        }
+      ]
+spec:
+  containers:
+  - name: test
+    image: alpine
+    command:
+    - /bin/sh
+    - -c
+    - |
+      ip addr add 10.0.26.101/24 dev eth1
+      ip link set eth1 up
+      sleep infinity
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multus-test
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "enx2-net-dynamic",
+          "interface": "eth2"
+        }
+      ]
+spec:
+  containers:
+  - name: test
+    image: alpine
+    command:
+    - sleep
+    - infinity
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
