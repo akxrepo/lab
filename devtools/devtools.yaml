@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devtools-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devtools
+  template:
+    metadata:
+      labels:
+        app: devtools
+    spec:
+      containers:
+      - name: devtools
+        image: akimagehub/devtools:latest
+        stdin: true
+        tty: true
