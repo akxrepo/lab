@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: devtools-deployment
+  name: devtools-ubi-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: devtools
+      app: devtools-ubi
   template:
     metadata:
       labels:
-        app: devtools
+        app: devtools-ubi
     spec:
       containers:
-      - name: devtools
-        image: akimagehub/devtools:latest
+      - name: devtools-ubi
+        image: 961341535886.dkr.ecr.ap-southeast-2.amazonaws.com/devtools:ubi-latest
         stdin: true
         tty: true

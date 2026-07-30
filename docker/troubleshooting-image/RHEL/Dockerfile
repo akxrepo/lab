@@ -15,7 +15,6 @@ RUN dnf install -y --nodocs --allowerasing \
         net-tools \
         bind-utils \
         nmap-ncat \
-        traceroute \
         mtr \
         tcpdump \
         openssl \

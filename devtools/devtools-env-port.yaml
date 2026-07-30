@@ -14,6 +14,12 @@ spec:
     spec:
       containers:
       - name: devtools
-        image: akimagehub/devtools:latest
+        image: 961341535886.dkr.ecr.ap-southeast-2.amazonaws.com/devtools:ubi-latest
         stdin: true
         tty: true
+        env:
+        - name: test
+          value: test
+        ports:
+        - name: test-port1
+          containerPort: 8292
