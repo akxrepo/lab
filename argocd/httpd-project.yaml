@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: httpd
+  namespace: argocd
+spec:
+  description: Apps sourced from akxrepo/lab, deployed into the httpd namespace
+  sourceRepos:
+    - https://github.com/akxrepo/lab.git
+  destinations:
+    - namespace: httpd
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: Service

@@ -1,0 +1,17 @@
+# Registers the repo directly with ArgoCD as a Secret (the argocd-cm `repositories`
+# key is ignored by ArgoCD v3.x — this is the only mechanism it reads).
+# Credentials live in this same Secret; fill in `password` (a GitHub PAT) before
+# applying, or create it imperatively instead (see notes.md) so the token never
+# lands in a tracked file.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: lab-repo-creds
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+type: Opaque
+stringData:
+  type: git
+  url: https://github.com/akxrepo/lab.git
+  password: CHANGEME
