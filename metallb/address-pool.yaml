@@ -1,0 +1,20 @@
+# Range carved out of the kind docker network (172.18.0.0/16); nodes sit at
+# .2/.3 so this is well clear of them. Adjust if your kind network subnet differs
+# (check with: docker network inspect -f '{{json .IPAM.Config}}' kind).
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: kind-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 172.18.255.200-172.18.255.250
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: l2-advert
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - kind-pool
