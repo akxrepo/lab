@@ -11,4 +11,4 @@ spec:
     path: argocd/httpd-kustomize
   destination:
     server: https://kubernetes.default.svc
-    namespace: httpd
+    namespace: httpd-kustomize
