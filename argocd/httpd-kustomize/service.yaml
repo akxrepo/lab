@@ -11,5 +11,5 @@ spec:
     protocol: TCP
     targetPort: 80
   selector:
-    app: httpd
+    app: httpd-kustomize
   type: ClusterIP
