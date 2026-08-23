@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: httpd
+  name: httpd-helm
   labels:
-    app: httpd
+    app: httpd-helm
 spec:
   replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
-      app: httpd
+      app: httpd-helm
   template:
     metadata:
       labels:
-        app: httpd
+        app: httpd-helm
     spec:
       containers:
-      - name: httpd
+      - name: httpd-helm
         image: {{ .Values.image.name }}
