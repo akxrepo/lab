@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-svc
+  labels:
+    app: httpd-svc
+spec:
+  ports:
+  - name: "80"
+    port: {{ .Values.service.port }}
+    protocol: TCP
+    targetPort: {{ .Values.service.targetPort }}
+  selector:
+    app: httpd
+  type: ClusterIP

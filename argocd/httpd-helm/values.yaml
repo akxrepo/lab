@@ -1,0 +1,8 @@
+image:
+  name: httpd
+
+replicas: 1
+
+service:
+  port: 80
+  targetPort: 80

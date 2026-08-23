@@ -14,4 +14,4 @@ type: Opaque
 stringData:
   type: git
   url: https://github.com/akxrepo/lab.git
-  password: CHANGEME
+  password: ${GITHUB_PAT}
